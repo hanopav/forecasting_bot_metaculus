@@ -14,16 +14,16 @@ from asknews_sdk import AskNewsSDK
 
 ######################### CONSTANTS #########################
 # Constants
-SUBMIT_PREDICTION = False  # set to True to publish your predictions to Metaculus
-USE_EXAMPLE_QUESTIONS = True  # set to True to forecast example questions rather than the tournament questions
+SUBMIT_PREDICTION = True  # set to True to publish your predictions to Metaculus
+USE_EXAMPLE_QUESTIONS = False  # set to True to forecast example questions rather than the tournament questions
 NUM_RUNS_PER_QUESTION = 5  # The median forecast is taken between NUM_RUNS_PER_QUESTION runs
 SKIP_PREVIOUSLY_FORECASTED_QUESTIONS = True
-GET_NEWS = False  # set to True to enable the bot to do online research
+GET_NEWS = True  # set to True to enable the bot to do online research
 
 # Environment variables
 # You only need *either* Exa or Perplexity or AskNews keys for online research
 METACULUS_TOKEN = os.getenv("METACULUS_TOKEN")
-PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
+# PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
 ASKNEWS_CLIENT_ID = os.getenv("ASKNEWS_CLIENT_ID")
 ASKNEWS_SECRET = os.getenv("ASKNEWS_SECRET")
 # EXA_API_KEY = os.getenv("EXA_API_KEY")
@@ -38,7 +38,7 @@ AXC_2025_TOURNAMENT_ID = 32564
 GIVEWELL_ID = 3600
 RESPIRATORY_OUTLOOK_ID = 3411
 
-TOURNAMENT_ID = Q1_2025_QUARTERLY_CUP_ID
+TOURNAMENT_ID = Q1_2025_AI_BENCHMARKING_ID
 
 # The example questions can be used for testing your bot. (note that question and post id are not always the same)
 EXAMPLE_QUESTIONS = [  # (question_id, post_id)
@@ -241,8 +241,6 @@ def run_research(question: str) -> str:
     if GET_NEWS == True:
         if ASKNEWS_CLIENT_ID and ASKNEWS_SECRET:
             research = call_asknews(question)
-        elif PERPLEXITY_API_KEY:
-            research = call_perplexity(question)
         else:
             raise ValueError("No API key provided")
     else:
@@ -251,38 +249,6 @@ def run_research(question: str) -> str:
     print(f"########################\nResearch Found:\n{research}\n########################")
 
     return research
-
-def call_perplexity(question: str) -> str:
-    url = "https://api.perplexity.ai/chat/completions"
-    api_key = PERPLEXITY_API_KEY
-    headers = {
-        "accept": "application/json",
-        "authorization": f"Bearer {api_key}",
-        "content-type": "application/json",
-    }
-    payload = {
-        "model": "llama-3.1-sonar-huge-128k-online",
-        "messages": [
-            {
-                "role": "system",  # this is a system prompt designed to guide the perplexity assistant
-                "content": """
-                You are an assistant to a superforecaster.
-                The superforecaster will give you a question they intend to forecast on.
-                To be a great assistant, you generate a concise but detailed rundown of the most relevant news, including if the question would resolve Yes or No based on current information.
-                You do not produce forecasts yourself.
-                """,
-            },
-            {
-                "role": "user",  # this is the actual prompt we ask the perplexity assistant to answer
-                "content": question,
-            },
-        ],
-    }
-    response = requests.post(url=url, json=payload, headers=headers)
-    if not response.ok:
-        raise Exception(response.text)
-    content = response.json()["choices"][0]["message"]["content"]
-    return content
 
 """
 def call_exa_smart_searcher(question: str) -> str:
@@ -1059,9 +1025,6 @@ async def forecast_questions(
         error_message = f"Errors were encountered: {errors}"
         print(error_message)
         raise RuntimeError(error_message)
-
-
-
 
 ######################## FINAL RUN #########################
 if __name__ == "__main__":
