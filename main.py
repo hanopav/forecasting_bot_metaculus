@@ -16,17 +16,15 @@ from asknews_sdk import AskNewsSDK
 # Constants
 SUBMIT_PREDICTION = True  # set to True to publish your predictions to Metaculus
 USE_EXAMPLE_QUESTIONS = False  # set to True to forecast example questions rather than the tournament questions
-NUM_RUNS_PER_QUESTION = 5  # The median forecast is taken between NUM_RUNS_PER_QUESTION runs
+NUM_RUNS_PER_QUESTION = 7  # The median forecast is taken between NUM_RUNS_PER_QUESTION runs
 SKIP_PREVIOUSLY_FORECASTED_QUESTIONS = True
 GET_NEWS = True  # set to True to enable the bot to do online research
 
 # Environment variables
 # You only need *either* Exa or Perplexity or AskNews keys for online research
 METACULUS_TOKEN = os.getenv("METACULUS_TOKEN")
-# PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
 ASKNEWS_CLIENT_ID = os.getenv("ASKNEWS_CLIENT_ID")
 ASKNEWS_SECRET = os.getenv("ASKNEWS_SECRET")
-# EXA_API_KEY = os.getenv("EXA_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") # You'll also need the OpenAI API Key if you want to use the Exa Smart Searcher
 
 # The tournament IDs below can be used for testing your bot.
@@ -200,8 +198,7 @@ def get_post_details(post_id: int) -> dict:
 CONCURRENT_REQUESTS_LIMIT = 5
 llm_rate_limiter = asyncio.Semaphore(CONCURRENT_REQUESTS_LIMIT)
 
-
-async def call_llm(prompt: str, model: str = "gpt-4o", temperature: float = 0.3) -> str:
+async def call_llm(prompt: str, model: str = "o1-preview", temperature: float = 0.3) -> str:
     """
     Makes a streaming completion request to OpenAI's API with concurrent request limiting.
     """
@@ -234,8 +231,6 @@ async def call_llm(prompt: str, model: str = "gpt-4o", temperature: float = 0.3)
 
     return "".join(collected_content)
 
-# Removed call to EXA API
-
 def run_research(question: str) -> str:
     research = ""
     if GET_NEWS == True:
@@ -249,37 +244,6 @@ def run_research(question: str) -> str:
     print(f"########################\nResearch Found:\n{research}\n########################")
 
     return research
-
-"""
-def call_exa_smart_searcher(question: str) -> str:
-    if OPENAI_API_KEY is None:
-        searcher = forecasting_tools.ExaSearcher(
-            include_highlights=True,
-            num_results=10,
-        )
-        highlights = asyncio.run(searcher.invoke_for_highlights_in_relevance_order(question))
-        prioritized_highlights = highlights[:10]
-        combined_highlights = ""
-        for i, highlight in enumerate(prioritized_highlights):
-            combined_highlights += f'[Highlight {i+1}]:\nTitle: {highlight.source.title}\nURL: {highlight.source.url}\nText: "{highlight.highlight_text}"\n\n'
-        response = combined_highlights
-    else:
-        searcher = forecasting_tools.SmartSearcher(
-            temperature=0,
-            num_searches_to_run=2,
-            num_sites_per_search=10,
-        )
-        prompt = (
-            "You are an assistant to a superforecaster. The superforecaster will give"
-            "you a question they intend to forecast on. To be a great assistant, you generate"
-            "a concise but detailed rundown of the most relevant news, including if the question"
-            "would resolve Yes or No based on current information. You do not produce forecasts yourself."
-            f"\n\nThe question is: {question}"
-        )
-        response = asyncio.run(searcher.invoke(prompt))
-
-    return response
-"""
 
 def call_asknews(question: str) -> str:
     """
@@ -340,20 +304,46 @@ def call_asknews(question: str) -> str:
 # This section includes functionality for binary questions.
 
 BINARY_PROMPT_TEMPLATE = """
-You are a professional forecaster interviewing for a job.
+You are an intelligence analyst at an important governmental agency tasked with
+assessing open-source intelligence and reasoning about similar previous
+situations to develop a probabilistic estimate for a question asked by your
+superior.
 
-Your interview question is:
+Your superior is also a professional forecaster, with a strong track record of
+accurate forecasts of the future. They will ask you a question, and your task
+is to provide the most accurate forecast you can. To do this, you evaluate past
+data and trends carefully, make use of comparison classes of similar events,
+take into account base rates about how past events unfolded, and outline the
+best reasons for and against any particular outcome, including how they might
+mutually reinforce or rule each other out.
+
+You know that the best forecasters, which you aspire to be, don't just
+forecast according to the "vibe" of the question, and are not afraid to assign
+very low or very high probabilities if the available evidence supports this.
+
+Think about the question in a structured way. Consider what chain of events
+might need to occur for the event in question to come true, how often it has
+come true in the past in similar situations, and incorporate this in your
+reasoning, which you are to present in full. In your reasoning, you are
+supported by a quick overview of the available information your previous
+research on the topic has shown.
+
+You can't know the future, and your superior knows that, so it is more important
+to give an honest estimate that reflects the available evidence. You do not
+hedge your uncertainty, but try to give the most likely point estimate for the
+event in question happening. Remember to make sure that your point estimate
+accurately reflects your research and analysis.
+
+Question asked by your superior is:
 {title}
 
 Question background:
 {background}
 
-
 This question's outcome will be determined by the specific criteria below. These criteria have not yet been satisfied:
 {resolution_criteria}
 
 {fine_print}
-
 
 Your research assistant says:
 {summary_report}
@@ -439,9 +429,37 @@ async def get_binary_gpt_prediction(
 # @title Numeric prompt & functions
 
 NUMERIC_PROMPT_TEMPLATE = """
-You are a professional forecaster interviewing for a job.
+You are an intelligence analyst at an important governmental agency tasked with
+assessing open-source intelligence and reasoning about similar previous
+situations to develop a probabilistic estimate for a question asked by your
+superior.
 
-Your interview question is:
+Your superior is also a professional forecaster, with a strong track record of
+accurate forecasts of the future. They will ask you a question, and your task
+is to provide the most accurate forecast you can. To do this, you evaluate past
+data and trends carefully, make use of comparison classes of similar events,
+take into account base rates about how past events unfolded, and outline the
+best reasons for and against any particular outcome, including how they might
+mutually reinforce or rule each other out.
+
+You know that the best forecasters, which you aspire to be, don't just
+forecast according to the "vibe" of the question, and are not afraid to assign
+very low or very high probabilities if the available evidence supports this.
+
+Think about the question in a structured way. Consider what chain of events
+might need to occur for the event in question to come true, how often it has
+come true in the past in similar situations, and incorporate this in your
+reasoning, which you are to present in full. In your reasoning, you are
+supported by a quick overview of the available information your previous
+research on the topic has shown.
+
+You can't know the future, and your superior knows that, so it is more important
+to give an honest estimate that reflects the available evidence. You do not
+hedge your uncertainty, but try to give the most likely point estimate for the
+event in question happening. Remember to make sure that your point estimate
+accurately reflects your research and analysis.
+
+Question asked by your superior is:
 {title}
 
 Background:
@@ -450,7 +468,6 @@ Background:
 {resolution_criteria}
 
 {fine_print}
-
 
 Your research assistant says:
 {summary_report}
@@ -723,13 +740,40 @@ async def get_numeric_gpt_prediction(
 # @title Multiple Choice prompt & functions
 
 MULTIPLE_CHOICE_PROMPT_TEMPLATE = """
-You are a professional forecaster interviewing for a job.
+You are an intelligence analyst at an important governmental agency tasked with
+assessing open-source intelligence and reasoning about similar previous
+situations to develop a probabilistic estimate for a question asked by your
+superior.
 
-Your interview question is:
+Your superior is also a professional forecaster, with a strong track record of
+accurate forecasts of the future. They will ask you a question, and your task
+is to provide the most accurate forecast you can. To do this, you evaluate past
+data and trends carefully, make use of comparison classes of similar events,
+take into account base rates about how past events unfolded, and outline the
+best reasons for and against any particular outcome, including how they might
+mutually reinforce or rule each other out.
+
+You know that the best forecasters, which you aspire to be, don't just
+forecast according to the "vibe" of the question, and are not afraid to assign
+very low or very high probabilities if the available evidence supports this.
+
+Think about the question in a structured way. Consider what chain of events
+might need to occur for the event in question to come true, how often it has
+come true in the past in similar situations, and incorporate this in your
+reasoning, which you are to present in full. In your reasoning, you are
+supported by a quick overview of the available information your previous
+research on the topic has shown.
+
+You can't know the future, and your superior knows that, so it is more important
+to give an honest estimate that reflects the available evidence. You do not
+hedge your uncertainty, but try to give the most likely point estimate for the
+event in question happening. Remember to make sure that your point estimate
+accurately reflects your research and analysis.
+
+Question asked by your superior is:
 {title}
 
 The options are: {options}
-
 
 Background:
 {background}
@@ -737,7 +781,6 @@ Background:
 {resolution_criteria}
 
 {fine_print}
-
 
 Your research assistant says:
 {summary_report}
@@ -757,7 +800,6 @@ Option_B: Probability_B
 ...
 Option_N: Probability_N
 """
-
 
 def extract_option_probabilities_from_response(forecast_text: str, options) -> float:
 
