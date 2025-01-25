@@ -157,7 +157,6 @@ def list_posts_from_tournament(
     data = json.loads(response.content)
     return data
 
-
 def get_open_question_ids_from_tournament() -> list[tuple[int, int]]:
     posts = list_posts_from_tournament()
 
@@ -1027,8 +1026,7 @@ async def forecast_individual_question(
         post_question_comment(post_id, comment)
         summary_of_forecast += "Posted: Forecast was posted to Metaculus.\n"
 
-    return summary_of_forecast
-
+    return summary_of_forecast    
 
 async def forecast_questions(
     open_question_id_post_id: list[tuple[int, int]],
