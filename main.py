@@ -12,11 +12,10 @@ import requests
 import forecasting_tools
 from asknews_sdk import AskNewsSDK
 
-
 ######################### CONSTANTS #########################
 # Constants
-SUBMIT_PREDICTION = True  # set to True to publish your predictions to Metaculus
-USE_EXAMPLE_QUESTIONS = False  # set to True to forecast example questions rather than the tournament questions
+SUBMIT_PREDICTION = False  # set to True to publish your predictions to Metaculus
+USE_EXAMPLE_QUESTIONS = True  # set to True to forecast example questions rather than the tournament questions
 NUM_RUNS_PER_QUESTION = 5  # The median forecast is taken between NUM_RUNS_PER_QUESTION runs
 SKIP_PREVIOUSLY_FORECASTED_QUESTIONS = True
 GET_NEWS = False  # set to True to enable the bot to do online research
@@ -27,7 +26,7 @@ METACULUS_TOKEN = os.getenv("METACULUS_TOKEN")
 PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
 ASKNEWS_CLIENT_ID = os.getenv("ASKNEWS_CLIENT_ID")
 ASKNEWS_SECRET = os.getenv("ASKNEWS_SECRET")
-EXA_API_KEY = os.getenv("EXA_API_KEY")
+# EXA_API_KEY = os.getenv("EXA_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") # You'll also need the OpenAI API Key if you want to use the Exa Smart Searcher
 
 # The tournament IDs below can be used for testing your bot.
@@ -39,7 +38,7 @@ AXC_2025_TOURNAMENT_ID = 32564
 GIVEWELL_ID = 3600
 RESPIRATORY_OUTLOOK_ID = 3411
 
-TOURNAMENT_ID = Q1_2025_AI_BENCHMARKING_ID
+TOURNAMENT_ID = Q1_2025_QUARTERLY_CUP_ID
 
 # The example questions can be used for testing your bot. (note that question and post id are not always the same)
 EXAMPLE_QUESTIONS = [  # (question_id, post_id)
@@ -235,14 +234,13 @@ async def call_llm(prompt: str, model: str = "gpt-4o", temperature: float = 0.3)
 
     return "".join(collected_content)
 
+# Removed call to EXA API
 
 def run_research(question: str) -> str:
     research = ""
     if GET_NEWS == True:
         if ASKNEWS_CLIENT_ID and ASKNEWS_SECRET:
             research = call_asknews(question)
-        elif EXA_API_KEY:
-            research = call_exa_smart_searcher(question)
         elif PERPLEXITY_API_KEY:
             research = call_perplexity(question)
         else:
@@ -286,6 +284,7 @@ def call_perplexity(question: str) -> str:
     content = response.json()["choices"][0]["message"]["content"]
     return content
 
+"""
 def call_exa_smart_searcher(question: str) -> str:
     if OPENAI_API_KEY is None:
         searcher = forecasting_tools.ExaSearcher(
@@ -314,6 +313,7 @@ def call_exa_smart_searcher(question: str) -> str:
         response = asyncio.run(searcher.invoke(prompt))
 
     return response
+"""
 
 def call_asknews(question: str) -> str:
     """
