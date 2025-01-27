@@ -197,7 +197,7 @@ def get_post_details(post_id: int) -> dict:
 CONCURRENT_REQUESTS_LIMIT = 5
 llm_rate_limiter = asyncio.Semaphore(CONCURRENT_REQUESTS_LIMIT)
 
-async def call_llm(prompt: str, model: str = "o1-preview", temperature: float = 0.3) -> str:
+async def call_llm(prompt: str, model: str = "gpt-4o", temperature: float = 0.3) -> str:
     """
     Makes a streaming completion request to OpenAI's API with concurrent request limiting.
     """
@@ -368,7 +368,7 @@ def extract_probability_from_response_as_percentage_not_decimal(
     if matches:
         # Return the last number found before a '%'
         number = int(matches[-1])
-        number = min(99, max(1, number))  # clamp the number between 1 and 99
+        number = min(90, max(10, number))  # clamp the number between 15 and 85
         return number
     else:
         raise ValueError(f"Could not extract prediction from response: {forecast_text}")
@@ -854,7 +854,7 @@ def generate_multiple_choice_forecast(options, option_probabilities) -> dict:
 
     def normalize_list(float_list):
         # Step 1: Clamp values
-        clamped_list = [max(min(x, 0.99), 0.01) for x in float_list]
+        clamped_list = [max(min(x, 0.90), 0.10) for x in float_list]
 
         # Step 2: Calculate the sum of all elements
         total_sum = sum(clamped_list)
@@ -875,7 +875,6 @@ def generate_multiple_choice_forecast(options, option_probabilities) -> dict:
         probability_yes_per_category[options[i]] = normalized_option_probabilities[i]
 
     return probability_yes_per_category
-
 
 async def get_multiple_choice_gpt_prediction(
     question_details: dict,

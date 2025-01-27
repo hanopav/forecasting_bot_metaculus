@@ -3,7 +3,7 @@ name: Regularly forecast new questions
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/30 * * * *" # runs every 30 minutes. Make sure to skip already forecasted questions!
+    - cron: "*/15 * * * *" # runs every 15 minutes. Make sure to skip already forecasted questions!
 
 # Daily job to run the simple forecast bot
 jobs:
@@ -34,7 +34,7 @@ jobs:
         run: |
           poetry run python main.py
         # this reads the environment variables from the github repository.
-        # Store under Settings --> Secrets and variables --> Actions
+        # Store under Settings --> Secrets and variables --> Actions --> Repository Secrets
         env:
           METACULUS_TOKEN: ${{ secrets.METACULUS_TOKEN }} # replace this with the name of the variable under which you stored your own Metaculus token
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
