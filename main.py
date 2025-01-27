@@ -256,7 +256,7 @@ def call_asknews(question: str) -> str:
     # get the latest news related to the query (within the past 48 hours)
     hot_response = ask.news.search_news(
         query=question,  # your natural language query
-        n_articles=6,  # control the number of articles to include in the context, originally 5
+        n_articles=7,  # control the number of articles to include in the context, originally 5
         return_type="both",
         strategy="latest news",  # enforces looking at the latest news only
     )
