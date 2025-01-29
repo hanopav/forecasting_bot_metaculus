@@ -16,7 +16,7 @@ from asknews_sdk import AskNewsSDK
 # Constants
 SUBMIT_PREDICTION = True  # set to True to publish your predictions to Metaculus
 USE_EXAMPLE_QUESTIONS = False  # set to True to forecast example questions rather than the tournament questions
-NUM_RUNS_PER_QUESTION = 7  # The median forecast is taken between NUM_RUNS_PER_QUESTION runs
+NUM_RUNS_PER_QUESTION = 5  # The median forecast is taken between NUM_RUNS_PER_QUESTION runs
 SKIP_PREVIOUSLY_FORECASTED_QUESTIONS = True
 GET_NEWS = True  # set to True to enable the bot to do online research
 
@@ -256,7 +256,7 @@ def call_asknews(question: str) -> str:
     # get the latest news related to the query (within the past 48 hours)
     hot_response = ask.news.search_news(
         query=question,  # your natural language query
-        n_articles=7,  # control the number of articles to include in the context, originally 5
+        n_articles=6,  # control the number of articles to include in the context, originally 5
         return_type="both",
         strategy="latest news",  # enforces looking at the latest news only
     )
@@ -368,7 +368,7 @@ def extract_probability_from_response_as_percentage_not_decimal(
     if matches:
         # Return the last number found before a '%'
         number = int(matches[-1])
-        number = min(90, max(10, number))  # clamp the number between 15 and 85
+        number = min(99, max(1, number))  # clamp the number between 15 and 85
         return number
     else:
         raise ValueError(f"Could not extract prediction from response: {forecast_text}")
@@ -854,7 +854,7 @@ def generate_multiple_choice_forecast(options, option_probabilities) -> dict:
 
     def normalize_list(float_list):
         # Step 1: Clamp values
-        clamped_list = [max(min(x, 0.90), 0.10) for x in float_list]
+        clamped_list = [max(min(x, 0.99), 0.01) for x in float_list]
 
         # Step 2: Calculate the sum of all elements
         total_sum = sum(clamped_list)
