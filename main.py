@@ -16,7 +16,7 @@ from asknews_sdk import AskNewsSDK
 # Constants
 SUBMIT_PREDICTION = True  # set to True to publish your predictions to Metaculus
 USE_EXAMPLE_QUESTIONS = False  # set to True to forecast example questions rather than the tournament questions
-NUM_RUNS_PER_QUESTION = 7  # The median forecast is taken between NUM_RUNS_PER_QUESTION runs
+NUM_RUNS_PER_QUESTION = 5  # The median forecast is taken between NUM_RUNS_PER_QUESTION runs
 SKIP_PREVIOUSLY_FORECASTED_QUESTIONS = True
 GET_NEWS = True  # set to True to enable the bot to do online research
 
@@ -256,7 +256,7 @@ def call_asknews(question: str) -> str:
     # get the latest news related to the query (within the past 48 hours)
     hot_response = ask.news.search_news(
         query=question,  # your natural language query
-        n_articles=7,  # control the number of articles to include in the context, originally 5
+        n_articles=5,  # control the number of articles to include in the context, originally 5
         return_type="both",
         strategy="latest news",  # enforces looking at the latest news only
     )
