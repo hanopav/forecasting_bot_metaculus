@@ -264,7 +264,7 @@ def call_asknews(question: str) -> str:
     # get context from the "historical" database that contains a news archive going back to 2023
     historical_response = ask.news.search_news(
         query=question,
-        n_articles=10,
+        n_articles=5,
         return_type="both",
         strategy="news knowledge",  # looks for relevant news within the past 60 days
     )
